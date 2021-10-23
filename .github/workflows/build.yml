@@ -1,6 +1,8 @@
 name: Build
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "20 19 * * 1-5"
   push:
     branches:
       - master # or the name of your main branch
