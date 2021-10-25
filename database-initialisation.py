@@ -10,8 +10,10 @@ CREATE TABLE IF NOT EXISTS subjects (
     name TEXT NOT NULL,
     written_weight INTEGER,
     oral_weight INTEGER,
+    special_weight INTEGER,
     FOREIGN KEY (written_weight) REFERENCES weighting (value),
-    FOREIGN KEY (oral_weight) REFERENCES weighting (value)
+    FOREIGN KEY (oral_weight) REFERENCES weighting (value),
+    FOREIGN KEY (special_weight) REFERENCES weighting (value)
 )
 """)
 
@@ -21,7 +23,7 @@ CREATE TABLE IF NOT EXISTS grades (
     subject_name TEXT NOT NULL,
     grade INTEGER,
     weightng_type TEXT NOT NULL,
-    semester TEXT,
+    semester TEXT NOT NULL,
     FOREIGN KEY (subject_name) REFERENCES subjects (name),
     FOREIGN KEY (semester) REFERENCES semesters (name)
 )
