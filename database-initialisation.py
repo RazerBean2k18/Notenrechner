@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS subjects (
     name TEXT NOT NULL,
     written_weight INTEGER,
     oral_weight INTEGER,
-    FOREIGN KEY (subject_written_weight) REFERENCES weighting (value),
-    FOREIGN KEY (subject_oral_weight) REFERENCES weighting (value)
+    FOREIGN KEY (written_weight) REFERENCES weighting (value),
+    FOREIGN KEY (oral_weight) REFERENCES weighting (value)
 )
 """)
 
