@@ -2,7 +2,7 @@ from tkinter import *
 from sqlite3 import *
 
 root = Tk()
-root.geometry('100x200')
+root.geometry('200x100')
 root.resizable(False, False)
 root.title("Notenrechner")
 
