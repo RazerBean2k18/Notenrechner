@@ -2,6 +2,9 @@ from tkinter import *
 from sqlite3 import *
 
 root = Tk()
+root.geometry('100x200')
+root.resizable(False, False)
+root.title("Notenrechner")
 
 def create_connection(path):
     connection = None
