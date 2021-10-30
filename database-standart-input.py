@@ -16,11 +16,12 @@ VALUES
     (6, "Physik", 60, 40, 0),
     (7, "Geschichte", 50, 50, 0),
     (8, "Gemeinschaftskunde", 50, 50, 0),
-    (9, "Ethik", 50, 50, 0),
-    (10, "Bildende Kunst", 30, 20, 50),
-    (11, "Sport", 50, 50, 0),
-    (12, "Seminarkurs", 50, 50, 0),
-    (13, "Informatik", 50, 50, 0);
+    (9, "Geographie", 50, 50, 0),
+    (10, "Ethik", 50, 50, 0),
+    (11, "Bildende Kunst", 30, 20, 50),
+    (12, "Sport", 50, 50, 0),
+    (13, "Seminarkurs", 50, 50, 0),
+    (14, "Informatik", 50, 50, 0);
 """)
 
 c.execute("""
