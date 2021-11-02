@@ -1,10 +1,3 @@
-#Labelmaker: self, root, x, y, width, height, font size, text
-#Buttonmaker: self, root, x, y, width, height, font size, text, command
-#Optionmenumaker: self, root, x, y, width, height, font size, text, options as list
-#Screen: root, title of window
-#
-#########################################################
-
 from tkinter import *
 from sqlite3 import *
 
@@ -30,7 +23,7 @@ subjects_list = ["Wirtschaft", "Englisch", "Mathe", "Deutsch", "Biologie",
 
 semesters_list = ["Halbjahr I", "Halbjahr II", "Halbjahr III", "Halbjahr IV"]
 
-points_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+points_list = [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 
 types_list = ["schriftlich", "mündlich", "spezial"]
 
@@ -89,6 +82,14 @@ class Screen:
 #########################################################
 
 def menubar_initialisation():
+
+    def submenu_fach(value):
+        sub_fach_menu.add_command(label=subjects_list[value], command=lambda:submenu_fach_select(value))
+
+    def submenu_fach_select(value):
+        noten_subject_select.set_value(subjects_list[value])
+        activate_notenscreen()
+
     menubar = Menu(root)
     root.config(menu=menubar)
     
@@ -105,33 +106,26 @@ def menubar_initialisation():
     noten_menu.add_separator()
     noten_menu.add_command(label="Neue Note", command=activate_neuenotescreen)
 
-    x=0
-    for i in subjects_list:
-        sub_fach_menu.add_command(label=subjects_list[x])
-        x=x+1
-#command=lambda:submenu_fach_selected(i)
+    number_of_subjects = len(subjects_list)
+    x=1
+
+    while x < number_of_subjects:
+        submenu_fach(x-1)
+        x = x+1
     
     gesamt_menu.add_command(label="Übersicht", command=activate_gesamtscreen)
     gesamt_menu.add_separator()
     gesamt_menu.add_command(label="Details", command=activate_detailscreen)
-    
+
     menubar.add_cascade(label="Notenrechner", menu=rechner_menu)
     menubar.add_cascade(label="Noten", menu=noten_menu)
     menubar.add_cascade(label="Gesamt", menu=gesamt_menu)
-
-def submenu_fach_select(value):
-    noten_subject_select.set_value(subjects_list[value])
-    activate_notenscreen()
-
-#########################################################
 
 def command_notenscreen_selected_fach(event):
     notenscreen_selected_fach()
     
 def notenscreen_selected_fach():
     Labelmaker(notenroot, 85, 34, 430, 40, 36, text=noten_subject_select.value_selected.get())
-
-#########################################################
 
 def fach_already_selected():
     selected_fach = noten_subject_select.value_selected.get()
@@ -155,8 +149,6 @@ def neue_noten_values():
 
 def clear_error_message():
     Labelmaker(neuroot, 215, 270, 171, 30, 14, text="")
-
-#########################################################
 
 def activate_homescreen():
     HomeScreen.show()
@@ -202,19 +194,13 @@ NeueNoteScreen = Screen(neuroot, "Neue Note")
 GesamtScreen = Screen(gesamtroot, "Übersicht")
 DetailScreen = Screen(detailroot, "Details")
 
-#HomeScreen set up
-
 home_title = Labelmaker(homeroot, 115, 111, 370, 75, 64, text="Notenrechner")
 home_button_noten = Buttonmaker(homeroot, 170, 208, 260, 30, 14, text="Noten", command=activate_notenscreen)
 home_button_gesamt = Buttonmaker(homeroot, 170, 260, 260, 30, 14, text="Gesamt", command=activate_gesamtscreen)
 
-#NotenScreen set up
-
 noten_title = Labelmaker(notenroot, 85, 34, 430, 40, 36, text="Fach auswählen")
 noten_subject_select = Optionmenumaker(notenroot, 86, 335, 171, 30, 14, subjects_list, text="Fach auswählen", command=command_notenscreen_selected_fach)
 noten_button_neuenote = Buttonmaker(notenroot, 343, 335, 171, 30, 14, text="Neue Note", command=fach_already_selected)
-
-#NeueNoteScreen set up
 
 neue_note_title = Labelmaker(neuroot, 171, 60, 260, 40, 36, text="Neue Note")
 neue_note_button_fertig = Buttonmaker(neuroot, 171, 310, 260, 30, 14, text="Fertig", command=neue_noten_values)
@@ -223,12 +209,8 @@ neue_note_semester_select = Optionmenumaker(neuroot, 343, 166, 171, 30, 14, seme
 neue_note_points_select = Optionmenumaker(neuroot, 86, 216, 171, 30, 14, points_list, text="Punkte auswählen")
 neue_note_type_select = Optionmenumaker(neuroot, 343, 216, 171, 30, 14, types_list, text="Art auswählen")
 
-#GesamtScreen set up
-
-#DetailScreen set up
-
-
 #########################################################
+
 menubar_initialisation()
 activate_homescreen()
 
