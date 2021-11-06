@@ -1,0 +1,15 @@
+id	name	written_weight	oral_weight	special_weight
+1	Wirtschaft	50	50	0
+2	Englisch	50	50	0
+3	Mathe	66	33	0
+4	Deutsch	50	50	0
+5	Biologie	50	50	0
+6	Physik	60	40	0
+7	Geschichte	50	50	0
+8	Gemeinschaftskunde	50	50	0
+9	Geographie	50	50	0
+10	Ethik	50	50	0
+11	Bildende Kunst	30	20	50
+12	Sport	50	50	0
+13	Seminarkurs	50	50	0
+14	Informatik	50	50	0

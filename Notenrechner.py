@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import ttk
 from csv import *
 import csv as csv
 from sqlite3 import *
@@ -25,40 +26,78 @@ error_message = "Error - Eine oder mehrere Daten fehlen"
 
 font_type = "DIN Alternate"
 
+style = ttk.Style()
+style.theme_use("default")
+
 #########################################################
 
 class Labelmaker:
-    def __init__(self, master, x, y, w, h, size, **kwargs): 
+    def __init__(self, master, x, y, w, h, font_size, **kwargs): 
         f = Frame(master, height=h, width=w)
         f.pack_propagate(0)
         f.place(x=x, y=y)
-        self.label = Label(f, font=(font_type, size), **kwargs)
+        self.label = Label(f, font=(font_type, font_size), **kwargs)
         self.label.pack(fill=BOTH, expand=1)
         
 class Buttonmaker:
-    def __init__(self, master, x, y, w, h, size, *args, **kwargs):
+    def __init__(self, master, x, y, w, h, font_size, *args, **kwargs):
         f = Frame(master, height=h, width=w)
         f.pack_propagate(0)
         f.place(x=x, y=y)
-        self.button = Button(f, font=(font_type, size), *args, **kwargs)
+        self.button = Button(f, font=(font_type, font_size), *args, **kwargs)
         self.button.pack(fill=BOTH, expand=1)
 
 class Optionmenumaker:
-    def __init__(self, master, x, y, w, h, size, option_list, text, **kwarg):
+    def __init__(self, master, x, y, w, h, font_size, option_list, text, **kwarg):
         f = Frame(master, height=h, width=w)
         f.pack_propagate(0)
         f.place(x=x, y=y)
         self.value_selected = StringVar(master)
         self.value_selected.set(text)
         self.question_menu = OptionMenu(f, self.value_selected, *option_list, **kwarg)
-        self.question_menu.config(font=(font_type, size))
+        self.question_menu.config(font=(font_type, font_size))
         self.styled_menu = root.nametowidget(self.question_menu.menuname)
-        self.styled_menu.config(font=(font_type, size))
+        self.styled_menu.config(font=(font_type, font_size))
         self.question_menu.pack(fill=BOTH, expand=1)
 
     def set_value(self, value):
         self.value_selected.set(value)
         notenscreen_selected_fach()
+
+class Treemaker:
+    def __init__(self, master, x, y, w, h, font_size, columns):
+        f = Frame(master, height=h, width=w)
+        f.pack_propagate(0)
+        f.place(x=x, y=y)
+        self.tree = ttk.Treeview(f, columns=columns, show='headings')
+        style = ttk.Style()
+        style.configure("Treeview.Heading", font=(font_type, font_size))
+        self.tree.pack(fill=BOTH, expand=1)
+
+    def heading(self, column, title):
+        self.tree.heading(column, text=title)
+
+    def column_width(self, column, width_value, custom_anchor):
+        self.tree.column(column, width=width_value, anchor=custom_anchor, stretch=NO)
+
+    def insert(self, font_size, place, values):
+        self.tree.insert('', place, values=values)
+        style = ttk.Style()
+        style.configure("Treeview", font=(font_type, font_size))
+
+    def delete_data(self):
+        for i in self.tree.get_children():
+            self.tree.delete(i)
+        
+
+class Scrollbarmaker:
+    def __init__(self, master, x, y, w, h, own_tree):
+        f = Frame(master, height=h, width=w)
+        f.pack_propagate(0)
+        f.place(x=x, y=y)
+        self.scrollbar = Scrollbar(f, orient=VERTICAL, command=own_tree.tree.yview)
+        own_tree.tree.configure(yscroll=self.scrollbar.set)
+        self.scrollbar.pack(fill=BOTH, expand=1)
 
 class Screen:
     def __init__(self, master, text):
@@ -86,7 +125,7 @@ class Setting:
             self.list.append(value[2:-3])
 
     def add_data(self, table, where, what):
-        cur.execute(f"INSERT INTO {table}({where}) VALUES ({what})")
+        cur.execute(f"""INSERT INTO {table}({where}) VALUES ("{what}")""")
         con.commit()
 
     def delete_data(self, table):
@@ -158,8 +197,8 @@ def database_initialisation():
     CREATE TABLE IF NOT EXISTS grades (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         subject_name TEXT NOT NULL,
-        grade INTEGER,
-        weightng_type TEXT NOT NULL,
+        grade TEXT NOT NULL,
+        weighting_type TEXT NOT NULL,
         semester TEXT NOT NULL,
         FOREIGN KEY (subject_name) REFERENCES subjects (name),
         FOREIGN KEY (semester) REFERENCES semesters (name)
@@ -190,58 +229,13 @@ def database_initialisation():
     con.commit()
 
 def database_backup():
-    pass
-
-def basic_database_setup():
-    database_backup()
-    
-    cur.execute("DELETE FROM subjects")
-    cur.execute("DELETE FROM grades")
-    cur.execute("DELETE FROM semesters")
-    cur.execute("DELETE FROM points")
-    cur.execute("DELETE FROM types")
-
-    cur.execute("""
-                INSERT INTO
-                    points(id, name)
-                VALUES
-                    (1, 15),
-                    (2, 14),
-                    (3, 13),
-                    (4, 12),
-                    (5, 11),
-                    (6, 10),
-                    (7, 9),
-                    (8, 8),
-                    (9, 7),
-                    (10, 6),
-                    (11, 5),
-                    (12, 4),
-                    (13, 3),
-                    (14, 2),
-                    (15, 1),
-                    (16, 0)                    
-                """)
-    
-    cur.execute("""
-                INSERT INTO
-                    types(id, name)
-                VALUES
-                    (1, schriftlich),
-                    (2, mündlich),
-                    (3, spezial)                
-                """)
-
-    cur.execute("""
-                INSERT INTO
-                    points(id, name)
-                VALUES
-                    (1, Halbjahr I),
-                    (2, Halbjahr II),
-                    (3, Halbjahr III),
-                    (4, Halbjahr IV)                   
-                """)
-    
+    table_list = ["subjects", "grades", "semesters", "points", "types"]
+    for table in table_list:
+        cur.execute(f"SELECT * FROM {table}")
+        with open(f"./backups/{table}-backup.csv", "w") as csv_file:
+          csv_writer = csv.writer(csv_file, delimiter="\t")
+          csv_writer.writerow([i[0] for i in cur.description])
+          csv_writer.writerows(cur)
     con.commit()
 
 def menubar_initialisation():
@@ -290,9 +284,15 @@ def command_notenscreen_selected_fach(event):
     notenscreen_selected_fach()
     
 def notenscreen_selected_fach():
-    Labelmaker(notenroot, 85, 34, 430, 40, 36, text=noten_subject_select.value_selected.get())
+    subject_selected = noten_subject_select.value_selected.get()
+    Labelmaker(notenroot, 85, 34, 430, 40, 36, text=subject_selected)
+    noten_display.delete_data()
+    cur.execute(f"""SELECT grade, weighting_type, semester FROM grades WHERE subject_name=='{subject_selected}'""")
+    rows = cur.fetchall()
+    for row in rows:
+        noten_display.insert(14, END, row)
 
-def fach_already_selected():
+def neue_note_fach_already_selected():
     selected_fach = noten_subject_select.value_selected.get()
     if selected_fach != "Fach auswählen":
         neue_note_subject_select.value_selected.set(selected_fach)
@@ -308,7 +308,15 @@ def neue_noten_values():
     if subject_selected == "Fach auswählen" or semester_selected == "Halbjahr auswählen" or points_selected == "Punkte auswählen" or type_selected == "Art auswählen":
         Labelmaker(neuroot, 171, 270, 260, 30, 14, text=error_message)
     else:
+        print(type(subject_selected))
         showinfo(title='Information', message=f"Fach: {subject_selected}\nPunkte: {points_selected}\nArt: {type_selected}\nHalbjahr: {semester_selected}")
+        cur.execute(f"""
+                        INSERT INTO
+                            grades (subject_name, grade, weighting_type, semester)
+                        VALUES
+                            ("{subject_selected}", "{points_selected}", "{type_selected}", "{semester_selected}")
+                    """)
+        con.commit()
         activate_notenscreen()
 
 def clear_error_message():
@@ -338,16 +346,19 @@ home_title = Labelmaker(homeroot, 115, 111, 370, 75, 64, text="Notenrechner")
 home_button_noten = Buttonmaker(homeroot, 170, 208, 260, 30, 14, text="Noten", command=activate_notenscreen)
 home_button_gesamt = Buttonmaker(homeroot, 170, 260, 260, 30, 14, text="Gesamt", command=activate_gesamtscreen)
 
-##settings_title = Labelmaker(settingsroot, 171, 60, 260, 40, 36, text="Einstellungen")
-##settings_button_fertig = Buttonmaker(settingsroot, 171, 310, 260, 30, 14, text="Fertig", command=neue_noten_values)
-##settings_subject_select = Buttonmaker(settingsroot, 86, 166, 171, 30, 14, subject_settings.list, text="Fächer eintragen")
-##settings_semester_select = Buttonmaker(settingsroot, 343, 166, 171, 30, 14, semester_settings.list, text="Semester eintragen")
-##settings_points_select = Buttonmaker(settingsroot, 86, 216, 171, 30, 14, point_settings.list, text="Punkte eintragen")
-##settings_type_select = Buttonmaker(settingsroot, 343, 216, 171, 30, 14, type_settings.list, text="Art auswählen")
+settings_title = Labelmaker(settingsroot, 171, 60, 260, 40, 36, text="Einstellungen")
 
 noten_title = Labelmaker(notenroot, 85, 34, 430, 40, 36, text="Fach auswählen")
 noten_subject_select = Optionmenumaker(notenroot, 86, 335, 171, 30, 14, subject_settings.list, text="Fach auswählen", command=command_notenscreen_selected_fach)
-noten_button_neuenote = Buttonmaker(notenroot, 343, 335, 171, 30, 14, text="Neue Note", command=fach_already_selected)
+noten_button_neuenote = Buttonmaker(notenroot, 343, 335, 171, 30, 14, text="Neue Note", command=neue_note_fach_already_selected)
+noten_display = Treemaker(notenroot, 86, 86, 418, 235, 14, ["points", "type", "semester"])
+noten_display.heading("points", "Punkte")
+noten_display.column_width("points", 139, "center")
+noten_display.heading("type", "Art")
+noten_display.column_width("type", 138, "w")
+noten_display.heading("semester", "Halbjahr")
+noten_display.column_width("semester", 138, "w")
+noten_display_scrollbar = Scrollbarmaker(notenroot, 504, 86, 10, 235, noten_display)
 
 neue_note_title = Labelmaker(neuroot, 171, 60, 260, 40, 36, text="Neue Note")
 neue_note_button_fertig = Buttonmaker(neuroot, 171, 310, 260, 30, 14, text="Fertig", command=neue_noten_values)
@@ -359,5 +370,3 @@ neue_note_type_select = Optionmenumaker(neuroot, 343, 216, 171, 30, 14, type_set
 #########################################################
 menubar_initialisation()
 activate_homescreen()
-
-con.close()

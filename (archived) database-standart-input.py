@@ -4,6 +4,12 @@ conn = sql.connect('MasterDataBase.db')
 
 c = conn.cursor()
 
+c.execute("DELETE FROM subjects")
+c.execute("DELETE FROM grades")
+c.execute("DELETE FROM semesters")
+c.execute("DELETE FROM points")
+c.execute("DELETE FROM types")
+
 c.execute("""
 INSERT INTO
     subjects (id, name, written_weight, oral_weight, special_weight)
@@ -36,15 +42,33 @@ VALUES
 
 c.execute("""
 INSERT INTO
-    weighting (id, value)
+    points (id, name)
 VALUES
-    (1, 20),
-    (2, 30),
-    (3, 33),
-    (4, 40),
-    (5, 50),
-    (6, 60),
-    (7, 66);
+    (1, 15),
+    (2, 14),
+    (3, 13),
+    (4, 12),
+    (5, 11),
+    (6, 10),
+    (7, 9),
+    (8, 8),
+    (9, 7),
+    (10, 6),
+    (11, 5),
+    (12, 4),
+    (13, 3),
+    (14, 2),
+    (15, 1),
+    (16, 0)                    
+""")
+
+c.execute("""
+INSERT INTO
+    types (id, name)
+VALUES
+    (1, "schriftlich"),
+    (2, "mündlich"),
+    (3, "spezial")                
 """)
 
 conn.commit()
