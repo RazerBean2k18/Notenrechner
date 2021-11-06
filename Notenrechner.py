@@ -1,5 +1,8 @@
 from tkinter import *
+from csv import *
+import csv as csv
 from sqlite3 import *
+from tkinter.messagebox import showerror, showwarning, showinfo
 
 #########################################################
 
@@ -14,18 +17,9 @@ notenroot = Toplevel()
 neuroot = Toplevel()
 gesamtroot = Toplevel()
 detailroot = Toplevel()
+settingsroot = Toplevel()
 
 #########################################################
-
-subjects_list = ["Wirtschaft", "Englisch", "Mathe", "Deutsch", "Biologie",
-                 "Physik", "Geschichte", "Gemeinschaftskunde", "Geographie",
-                 "Ethik", "Bildende Kunst", "Sport", "Seminarkurs", "Informatik"]
-
-semesters_list = ["Halbjahr I", "Halbjahr II", "Halbjahr III", "Halbjahr IV"]
-
-points_list = [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
-
-types_list = ["schriftlich", "mündlich", "spezial"]
 
 error_message = "Error - Eine oder mehrere Daten fehlen"
 
@@ -79,15 +73,184 @@ class Screen:
     def show(self):
         self.master.deiconify()
 
+class Setting:
+    def __init__(self):
+        self.list = []
+
+    def get_data(self, what, table):
+        self.pre_list = []
+        for row in cur.execute(f"SELECT {what} FROM {table}"):
+            data = str(row)
+            self.pre_list.append(data)
+        for value in self.pre_list:
+            self.list.append(value[2:-3])
+
+    def add_data(self, table, where, what):
+        cur.execute(f"INSERT INTO {table}({where}) VALUES ({what})")
+        con.commit()
+
+    def delete_data(self, table):
+        cur.execute(f"DELETE FROM {table}")
+        con.commit()
+
 #########################################################
+
+def activate_homescreen():
+    HomeScreen.show()
+    NotenScreen.hide()
+    NeueNoteScreen.hide()
+    GesamtScreen.hide()
+    DetailScreen.hide()
+    SettingsScreen.hide()
+
+def activate_notenscreen():
+    HomeScreen.hide()
+    NotenScreen.show()
+    NeueNoteScreen.hide()
+    GesamtScreen.hide()
+    DetailScreen.hide()
+    SettingsScreen.hide()
+
+def activate_neuenotescreen():
+    HomeScreen.hide()
+    NotenScreen.hide()
+    NeueNoteScreen.show()
+    GesamtScreen.hide()
+    DetailScreen.hide()
+    SettingsScreen.hide()
+
+def activate_gesamtscreen():
+    HomeScreen.hide()
+    NotenScreen.hide()
+    NeueNoteScreen.hide()
+    GesamtScreen.show()
+    DetailScreen.hide()
+    SettingsScreen.hide()
+
+def activate_detailscreen():
+    HomeScreen.hide()
+    NotenScreen.hide()
+    NeueNoteScreen.hide()
+    GesamtScreen.hide()
+    DetailScreen.show()
+    SettingsScreen.hide()
+
+def activate_settingsscreen():
+    HomeScreen.hide()
+    NotenScreen.hide()
+    NeueNoteScreen.hide()
+    GesamtScreen.hide()
+    DetailScreen.hide()
+    SettingsScreen.show()
+
+def database_initialisation():
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS subjects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        written_weight INTEGER,
+        oral_weight INTEGER,
+        special_weight INTEGER
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS grades (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subject_name TEXT NOT NULL,
+        grade INTEGER,
+        weightng_type TEXT NOT NULL,
+        semester TEXT NOT NULL,
+        FOREIGN KEY (subject_name) REFERENCES subjects (name),
+        FOREIGN KEY (semester) REFERENCES semesters (name)
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS semesters (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS points (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS types (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL
+    )
+    """)
+
+    con.commit()
+
+def database_backup():
+    pass
+
+def basic_database_setup():
+    database_backup()
+    
+    cur.execute("DELETE FROM subjects")
+    cur.execute("DELETE FROM grades")
+    cur.execute("DELETE FROM semesters")
+    cur.execute("DELETE FROM points")
+    cur.execute("DELETE FROM types")
+
+    cur.execute("""
+                INSERT INTO
+                    points(id, name)
+                VALUES
+                    (1, 15),
+                    (2, 14),
+                    (3, 13),
+                    (4, 12),
+                    (5, 11),
+                    (6, 10),
+                    (7, 9),
+                    (8, 8),
+                    (9, 7),
+                    (10, 6),
+                    (11, 5),
+                    (12, 4),
+                    (13, 3),
+                    (14, 2),
+                    (15, 1),
+                    (16, 0)                    
+                """)
+    
+    cur.execute("""
+                INSERT INTO
+                    types(id, name)
+                VALUES
+                    (1, schriftlich),
+                    (2, mündlich),
+                    (3, spezial)                
+                """)
+
+    cur.execute("""
+                INSERT INTO
+                    points(id, name)
+                VALUES
+                    (1, Halbjahr I),
+                    (2, Halbjahr II),
+                    (3, Halbjahr III),
+                    (4, Halbjahr IV)                   
+                """)
+    
+    con.commit()
 
 def menubar_initialisation():
 
     def submenu_fach(value):
-        sub_fach_menu.add_command(label=subjects_list[value], command=lambda:submenu_fach_select(value))
+        sub_fach_menu.add_command(label=subject_settings.list[value], command=lambda:submenu_fach_select(value))
 
     def submenu_fach_select(value):
-        noten_subject_select.set_value(subjects_list[value])
+        noten_subject_select.set_value(subject_settings.list[value])
         activate_notenscreen()
 
     menubar = Menu(root)
@@ -100,13 +263,15 @@ def menubar_initialisation():
     
     rechner_menu.add_command(label="Start", command=activate_homescreen)
     rechner_menu.add_separator()
+    rechner_menu.add_command(label="Einstellungen", command=activate_settingsscreen)
+    rechner_menu.add_separator()
     rechner_menu.add_command(label="Quit", command=root.destroy)
     
     noten_menu.add_cascade(label="Fächer", menu=sub_fach_menu)
     noten_menu.add_separator()
     noten_menu.add_command(label="Neue Note", command=activate_neuenotescreen)
 
-    number_of_subjects = len(subjects_list)
+    number_of_subjects = len(subject_settings.list)
     x=1
 
     while x < number_of_subjects:
@@ -134,7 +299,6 @@ def fach_already_selected():
         activate_neuenotescreen()
     else:
         activate_neuenotescreen()
-        
 
 def neue_noten_values():
     subject_selected = neue_note_subject_select.value_selected.get()
@@ -144,73 +308,55 @@ def neue_noten_values():
     if subject_selected == "Fach auswählen" or semester_selected == "Halbjahr auswählen" or points_selected == "Punkte auswählen" or type_selected == "Art auswählen":
         Labelmaker(neuroot, 171, 270, 260, 30, 14, text=error_message)
     else:
-        
+        showinfo(title='Information', message=f"Fach: {subject_selected}\nPunkte: {points_selected}\nArt: {type_selected}\nHalbjahr: {semester_selected}")
         activate_notenscreen()
 
 def clear_error_message():
     Labelmaker(neuroot, 215, 270, 171, 30, 14, text="")
 
-def activate_homescreen():
-    HomeScreen.show()
-    NotenScreen.hide()
-    NeueNoteScreen.hide()
-    GesamtScreen.hide()
-    DetailScreen.hide()
-
-def activate_notenscreen():
-    HomeScreen.hide()
-    NotenScreen.show()
-    NeueNoteScreen.hide()
-    GesamtScreen.hide()
-    DetailScreen.hide()
-
-def activate_neuenotescreen():
-    clear_error_message()
-    HomeScreen.hide()
-    NotenScreen.hide()
-    NeueNoteScreen.show()
-    GesamtScreen.hide()
-    DetailScreen.hide()
-
-def activate_gesamtscreen():
-    HomeScreen.hide()
-    NotenScreen.hide()
-    NeueNoteScreen.hide()
-    GesamtScreen.show()
-    DetailScreen.hide()
-
-def activate_detailscreen():
-    HomeScreen.hide()
-    NotenScreen.hide()
-    NeueNoteScreen.hide()
-    GesamtScreen.hide()
-    DetailScreen.show()
-
 #########################################################
+
+database_initialisation()
+
+subject_settings = Setting()
+subject_settings.get_data("name", "subjects")
+semester_settings = Setting()
+semester_settings.get_data("name", "semesters")
+point_settings = Setting()
+point_settings.get_data("name", "points")
+type_settings = Setting()
+type_settings.get_data("name", "types")
 
 HomeScreen = Screen(homeroot, "Notenrechner")
 NotenScreen = Screen(notenroot, "Noten")
 NeueNoteScreen = Screen(neuroot, "Neue Note")
 GesamtScreen = Screen(gesamtroot, "Übersicht")
 DetailScreen = Screen(detailroot, "Details")
+SettingsScreen = Screen(settingsroot, "Einstellungen")
 
 home_title = Labelmaker(homeroot, 115, 111, 370, 75, 64, text="Notenrechner")
 home_button_noten = Buttonmaker(homeroot, 170, 208, 260, 30, 14, text="Noten", command=activate_notenscreen)
 home_button_gesamt = Buttonmaker(homeroot, 170, 260, 260, 30, 14, text="Gesamt", command=activate_gesamtscreen)
 
+##settings_title = Labelmaker(settingsroot, 171, 60, 260, 40, 36, text="Einstellungen")
+##settings_button_fertig = Buttonmaker(settingsroot, 171, 310, 260, 30, 14, text="Fertig", command=neue_noten_values)
+##settings_subject_select = Buttonmaker(settingsroot, 86, 166, 171, 30, 14, subject_settings.list, text="Fächer eintragen")
+##settings_semester_select = Buttonmaker(settingsroot, 343, 166, 171, 30, 14, semester_settings.list, text="Semester eintragen")
+##settings_points_select = Buttonmaker(settingsroot, 86, 216, 171, 30, 14, point_settings.list, text="Punkte eintragen")
+##settings_type_select = Buttonmaker(settingsroot, 343, 216, 171, 30, 14, type_settings.list, text="Art auswählen")
+
 noten_title = Labelmaker(notenroot, 85, 34, 430, 40, 36, text="Fach auswählen")
-noten_subject_select = Optionmenumaker(notenroot, 86, 335, 171, 30, 14, subjects_list, text="Fach auswählen", command=command_notenscreen_selected_fach)
+noten_subject_select = Optionmenumaker(notenroot, 86, 335, 171, 30, 14, subject_settings.list, text="Fach auswählen", command=command_notenscreen_selected_fach)
 noten_button_neuenote = Buttonmaker(notenroot, 343, 335, 171, 30, 14, text="Neue Note", command=fach_already_selected)
 
 neue_note_title = Labelmaker(neuroot, 171, 60, 260, 40, 36, text="Neue Note")
 neue_note_button_fertig = Buttonmaker(neuroot, 171, 310, 260, 30, 14, text="Fertig", command=neue_noten_values)
-neue_note_subject_select = Optionmenumaker(neuroot, 86, 166, 171, 30, 14, subjects_list, text="Fach auswählen")
-neue_note_semester_select = Optionmenumaker(neuroot, 343, 166, 171, 30, 14, semesters_list, text="Halbjahr auswählen")
-neue_note_points_select = Optionmenumaker(neuroot, 86, 216, 171, 30, 14, points_list, text="Punkte auswählen")
-neue_note_type_select = Optionmenumaker(neuroot, 343, 216, 171, 30, 14, types_list, text="Art auswählen")
+neue_note_subject_select = Optionmenumaker(neuroot, 86, 166, 171, 30, 14, subject_settings.list, text="Fach auswählen")
+neue_note_semester_select = Optionmenumaker(neuroot, 343, 166, 171, 30, 14, semester_settings.list, text="Halbjahr auswählen")
+neue_note_points_select = Optionmenumaker(neuroot, 86, 216, 171, 30, 14, point_settings.list, text="Punkte auswählen")
+neue_note_type_select = Optionmenumaker(neuroot, 343, 216, 171, 30, 14, type_settings.list, text="Art auswählen")
 
 #########################################################
-
 menubar_initialisation()
 activate_homescreen()
 
