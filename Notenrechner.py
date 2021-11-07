@@ -19,12 +19,15 @@ neuroot = Toplevel()
 gesamtroot = Toplevel()
 detailroot = Toplevel()
 settingsroot = Toplevel()
+subject_settingsroot = Toplevel()
+style_settingsroot = Toplevel()
+export_settingsroot = Toplevel()
 
 #########################################################
 
 error_message = "Error - Eine oder mehrere Daten fehlen"
 
-font_type = "DIN Alternate"
+global font_type
 
 style = ttk.Style()
 style.theme_use("default")
@@ -141,6 +144,9 @@ def activate_homescreen():
     GesamtScreen.hide()
     DetailScreen.hide()
     SettingsScreen.hide()
+    SubjectSettingsScreen.hide()
+    StyleSettingsScreen.hide()
+    ExportSettingsScreen.hide()
 
 def activate_notenscreen():
     HomeScreen.hide()
@@ -149,14 +155,23 @@ def activate_notenscreen():
     GesamtScreen.hide()
     DetailScreen.hide()
     SettingsScreen.hide()
+    SubjectSettingsScreen.hide()
+    StyleSettingsScreen.hide()
+    ExportSettingsScreen.hide()
 
 def activate_neuenotescreen():
+    neue_note_semester_select.value_selected.set("Halbjahr auswählen")
+    neue_note_points_select.value_selected.set("Punkte auswählen")
+    neue_note_type_select.value_selected.set("Art auswählen")
     HomeScreen.hide()
     NotenScreen.hide()
     NeueNoteScreen.show()
     GesamtScreen.hide()
     DetailScreen.hide()
     SettingsScreen.hide()
+    SubjectSettingsScreen.hide()
+    StyleSettingsScreen.hide()
+    ExportSettingsScreen.hide()
 
 def activate_gesamtscreen():
     HomeScreen.hide()
@@ -165,6 +180,9 @@ def activate_gesamtscreen():
     GesamtScreen.show()
     DetailScreen.hide()
     SettingsScreen.hide()
+    SubjectSettingsScreen.hide()
+    StyleSettingsScreen.hide()
+    ExportSettingsScreen.hide()
 
 def activate_detailscreen():
     HomeScreen.hide()
@@ -173,6 +191,9 @@ def activate_detailscreen():
     GesamtScreen.hide()
     DetailScreen.show()
     SettingsScreen.hide()
+    SubjectSettingsScreen.hide()
+    StyleSettingsScreen.hide()
+    ExportSettingsScreen.hide()
 
 def activate_settingsscreen():
     HomeScreen.hide()
@@ -181,6 +202,42 @@ def activate_settingsscreen():
     GesamtScreen.hide()
     DetailScreen.hide()
     SettingsScreen.show()
+    SubjectSettingsScreen.hide()
+    StyleSettingsScreen.hide()
+    ExportSettingsScreen.hide()
+
+def activate_subjectsettingsscreen():
+    HomeScreen.hide()
+    NotenScreen.hide()
+    NeueNoteScreen.hide()
+    GesamtScreen.hide()
+    DetailScreen.hide()
+    SettingsScreen.hide()
+    SubjectSettingsScreen.show()
+    StyleSettingsScreen.hide()
+    ExportSettingsScreen.hide()
+
+def activate_stylesettingsscreen():
+    HomeScreen.hide()
+    NotenScreen.hide()
+    NeueNoteScreen.hide()
+    GesamtScreen.hide()
+    DetailScreen.hide()
+    SettingsScreen.hide()
+    SubjectSettingsScreen.hide()
+    StyleSettingsScreen.show()
+    ExportSettingsScreen.hide()
+
+def activate_exportsettingsscreen():
+    HomeScreen.hide()
+    NotenScreen.hide()
+    NeueNoteScreen.hide()
+    GesamtScreen.hide()
+    DetailScreen.hide()
+    SettingsScreen.hide()
+    SubjectSettingsScreen.hide()
+    StyleSettingsScreen.hide()
+    ExportSettingsScreen.show()
 
 def database_initialisation():
     cur.execute("""
@@ -226,9 +283,18 @@ def database_initialisation():
     )
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        font TEXT NOT NULL
+    )
+    """)
+
     con.commit()
 
-def database_backup():
+    get_font()
+
+def database_backup_full():
     table_list = ["subjects", "grades", "semesters", "points", "types"]
     for table in table_list:
         cur.execute(f"SELECT * FROM {table}")
@@ -236,6 +302,14 @@ def database_backup():
           csv_writer = csv.writer(csv_file, delimiter="\t")
           csv_writer.writerow([i[0] for i in cur.description])
           csv_writer.writerows(cur)
+    con.commit()
+
+def database_backup_grades():
+    cur.execute(f"SELECT * FROM grades")
+    with open(f"./backups/grades-backup.csv", "w") as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter="\t")
+        csv_writer.writerow([i[0] for i in cur.description])
+        csv_writer.writerows(cur)
     con.commit()
 
 def menubar_initialisation():
@@ -280,6 +354,14 @@ def menubar_initialisation():
     menubar.add_cascade(label="Noten", menu=noten_menu)
     menubar.add_cascade(label="Gesamt", menu=gesamt_menu)
 
+def get_font():
+    global font_type
+    font_type = cur.execute("SELECT font FROM settings")
+
+def set_font():
+    cur.execute(f"""INSERT INTO settings (font) VALUES ("{font_selected}")""")
+    get_font()
+
 def command_notenscreen_selected_fach(event):
     notenscreen_selected_fach()
     
@@ -308,7 +390,6 @@ def neue_noten_values():
     if subject_selected == "Fach auswählen" or semester_selected == "Halbjahr auswählen" or points_selected == "Punkte auswählen" or type_selected == "Art auswählen":
         Labelmaker(neuroot, 171, 270, 260, 30, 14, text=error_message)
     else:
-        print(type(subject_selected))
         showinfo(title='Information', message=f"Fach: {subject_selected}\nPunkte: {points_selected}\nArt: {type_selected}\nHalbjahr: {semester_selected}")
         cur.execute(f"""
                         INSERT INTO
@@ -317,10 +398,16 @@ def neue_noten_values():
                             ("{subject_selected}", "{points_selected}", "{type_selected}", "{semester_selected}")
                     """)
         con.commit()
+        notenscreen_selected_fach()
         activate_notenscreen()
 
 def clear_error_message():
     Labelmaker(neuroot, 215, 270, 171, 30, 14, text="")
+
+def subject_settings_delete_subject():
+    subject = subject_settings_subject_select.value_selected.get()
+    cur.execute(f"""DELETE FROM  subjects WHERE name='{subject}'""")
+    con.commit()
 
 #########################################################
 
@@ -341,12 +428,27 @@ NeueNoteScreen = Screen(neuroot, "Neue Note")
 GesamtScreen = Screen(gesamtroot, "Übersicht")
 DetailScreen = Screen(detailroot, "Details")
 SettingsScreen = Screen(settingsroot, "Einstellungen")
+SubjectSettingsScreen = Screen(subject_settingsroot, "Fächer Optionen")
+StyleSettingsScreen = Screen(style_settingsroot, "Style Optionen")
+ExportSettingsScreen = Screen(export_settingsroot, "Import/Export Optionen")
 
 home_title = Labelmaker(homeroot, 115, 111, 370, 75, 64, text="Notenrechner")
 home_button_noten = Buttonmaker(homeroot, 170, 208, 260, 30, 14, text="Noten", command=activate_notenscreen)
 home_button_gesamt = Buttonmaker(homeroot, 170, 260, 260, 30, 14, text="Gesamt", command=activate_gesamtscreen)
 
 settings_title = Labelmaker(settingsroot, 171, 60, 260, 40, 36, text="Einstellungen")
+settings_subject_options_button = Buttonmaker(settingsroot, 209, 143, 171, 30, 14, text="Fächer-Optionen", command=activate_subjectsettingsscreen)
+settings_style_options_button = Buttonmaker(settingsroot, 209, 191, 171, 30, 14, text="Style-Optionen", command=activate_stylesettingsscreen)
+settings_export_options_button = Buttonmaker(settingsroot, 209, 239, 171, 30, 14, text="Import/Export-Optionen", command=activate_exportsettingsscreen)
+settings_fertig_button = Buttonmaker(settingsroot, 171, 310, 260, 30, 14, text="Fertig", command=activate_homescreen)
+
+subject_settings_title = Labelmaker(subject_settingsroot, 140, 50, 321, 42, 36, text="Fächer - Optionen")
+subject_settings_label_subjects = Labelmaker(subject_settingsroot, 37, 125, 171, 30, 14, text="Fächer:")
+subject_settings_label_new_subjects = Labelmaker(subject_settingsroot, 37, 195, 171, 30, 14, text="Neues Fach:")
+subject_settings_seperator = Labelmaker(subject_settingsroot, 24, 169, 550, 12, 10, text="---------------------------------------------------------------------------------------------------------------------------------------")
+subject_settings_subject_select = Optionmenumaker(subject_settingsroot, 214, 125, 171, 30, 14, subject_settings.list, text="Fächer")
+subject_settings_subject_delete = Buttonmaker(subject_settingsroot, 432, 125, 130, 30, 14, text="Fach löschen", command=subject_settings_delete_subject)
+subject_settings_subject_delete_disclaimer = Labelmaker(subject_settingsroot, 432, 155, 130, 12, 8, text="Benötigt Restart im Anschluss!")
 
 noten_title = Labelmaker(notenroot, 85, 34, 430, 40, 36, text="Fach auswählen")
 noten_subject_select = Optionmenumaker(notenroot, 86, 335, 171, 30, 14, subject_settings.list, text="Fach auswählen", command=command_notenscreen_selected_fach)
@@ -370,3 +472,40 @@ neue_note_type_select = Optionmenumaker(neuroot, 343, 216, 171, 30, 14, type_set
 #########################################################
 menubar_initialisation()
 activate_homescreen()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
