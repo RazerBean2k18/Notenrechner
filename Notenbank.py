@@ -26,6 +26,11 @@ font_type = "DIN Alternate"
 style = ttk.Style()
 style.theme_use("default")
 
+halbjahr_text = "Halbjahr auswählen"
+punkte_text = "Punkte auswählen"
+art_text = "Art auswählen"
+fach_text = "Fach auswählen"
+
 #########################################################
 
 class Labelmaker:
@@ -142,9 +147,9 @@ def activate_notenscreen():
     NeueNoteScreen.hide()
 
 def activate_neuenotescreen():
-    neue_note_semester_select.value_selected.set("Halbjahr auswählen")
-    neue_note_points_select.value_selected.set("Punkte auswählen")
-    neue_note_type_select.value_selected.set("Art auswählen")
+    neue_note_semester_select.value_selected.set(halbjahr_text)
+    neue_note_points_select.value_selected.set(punkte_text)
+    neue_note_type_select.value_selected.set(art_text)
     HomeScreen.hide()
     NotenScreen.hide()
     NeueNoteScreen.show()
@@ -258,7 +263,7 @@ def notenscreen_selected_fach():
 
 def neue_note_fach_already_selected():
     selected_fach = noten_subject_select.value_selected.get()
-    if selected_fach != "Fach auswählen":
+    if selected_fach != fach_text:
         neue_note_subject_select.value_selected.set(selected_fach)
         activate_neuenotescreen()
     else:
@@ -269,7 +274,7 @@ def neue_noten_values():
     semester_selected = neue_note_semester_select.value_selected.get()
     points_selected = neue_note_points_select.value_selected.get()
     type_selected = neue_note_type_select.value_selected.get()
-    if subject_selected == "Fach auswählen" or semester_selected == "Halbjahr auswählen" or points_selected == "Punkte auswählen" or type_selected == "Art auswählen":
+    if subject_selected == fach_text or semester_selected == halbjahr_text or points_selected == punkte_text or type_selected == art_text:
         Labelmaker(neuroot, 171, 270, 260, 30, 14, text=error_message)
     else:
         showinfo(title='Information', message=f"Fach: {subject_selected}\nPunkte: {points_selected}\nArt: {type_selected}\nHalbjahr: {semester_selected}")
@@ -306,8 +311,8 @@ NeueNoteScreen = Screen(neuroot, "Neue Note")
 home_title = Labelmaker(homeroot, 115, 111, 370, 75, 64, text="Notenrechner")
 home_button_noten = Buttonmaker(homeroot, 170, 208, 260, 30, 14, text="Noten", command=activate_notenscreen)
 
-noten_title = Labelmaker(notenroot, 85, 34, 430, 40, 36, text="Fach auswählen")
-noten_subject_select = Optionmenumaker(notenroot, 86, 335, 171, 30, 14, subject_settings.list, text="Fach auswählen", command=command_notenscreen_selected_fach)
+noten_title = Labelmaker(notenroot, 85, 34, 430, 40, 36, text=fach_text)
+noten_subject_select = Optionmenumaker(notenroot, 86, 335, 171, 30, 14, subject_settings.list, text=fach_text, command=command_notenscreen_selected_fach)
 noten_button_neuenote = Buttonmaker(notenroot, 343, 335, 171, 30, 14, text="Neue Note", command=neue_note_fach_already_selected)
 noten_display = Treemaker(notenroot, 86, 86, 418, 235, 14, ["points", "type", "semester"])
 noten_display.heading("points", "Punkte")
@@ -320,10 +325,10 @@ noten_display_scrollbar = Scrollbarmaker(notenroot, 504, 86, 10, 235, noten_disp
 
 neue_note_title = Labelmaker(neuroot, 171, 60, 260, 40, 36, text="Neue Note")
 neue_note_button_fertig = Buttonmaker(neuroot, 171, 310, 260, 30, 14, text="Fertig", command=neue_noten_values)
-neue_note_subject_select = Optionmenumaker(neuroot, 86, 166, 171, 30, 14, subject_settings.list, text="Fach auswählen")
-neue_note_semester_select = Optionmenumaker(neuroot, 343, 166, 171, 30, 14, semester_settings.list, text="Halbjahr auswählen")
-neue_note_points_select = Optionmenumaker(neuroot, 86, 216, 171, 30, 14, point_settings.list, text="Punkte auswählen")
-neue_note_type_select = Optionmenumaker(neuroot, 343, 216, 171, 30, 14, type_settings.list, text="Art auswählen")
+neue_note_subject_select = Optionmenumaker(neuroot, 86, 166, 171, 30, 14, subject_settings.list, text=fach_text)
+neue_note_semester_select = Optionmenumaker(neuroot, 343, 166, 171, 30, 14, semester_settings.list, text=halbjahr_text)
+neue_note_points_select = Optionmenumaker(neuroot, 86, 216, 171, 30, 14, point_settings.list, text=punkte_text)
+neue_note_type_select = Optionmenumaker(neuroot, 343, 216, 171, 30, 14, type_settings.list, text=art_text)
 
 #########################################################
 menubar_initialisation()
