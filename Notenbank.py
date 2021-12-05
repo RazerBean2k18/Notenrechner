@@ -16,16 +16,12 @@ root.withdraw()
 homeroot = Toplevel()
 notenroot = Toplevel()
 neuroot = Toplevel()
-settingsroot = Toplevel()
-subject_settingsroot = Toplevel()
-style_settingsroot = Toplevel()
-export_settingsroot = Toplevel()
 
 #########################################################
 
 error_message = "Error - Eine oder mehrere Daten fehlen"
 
-global font_type
+font_type = "DIN Alternate"
 
 style = ttk.Style()
 style.theme_use("default")
@@ -139,19 +135,11 @@ def activate_homescreen():
     HomeScreen.show()
     NotenScreen.hide()
     NeueNoteScreen.hide()
-    SettingsScreen.hide()
-    SubjectSettingsScreen.hide()
-    StyleSettingsScreen.hide()
-    ExportSettingsScreen.hide()
 
 def activate_notenscreen():
     HomeScreen.hide()
     NotenScreen.show()
     NeueNoteScreen.hide()
-    SettingsScreen.hide()
-    SubjectSettingsScreen.hide()
-    StyleSettingsScreen.hide()
-    ExportSettingsScreen.hide()
 
 def activate_neuenotescreen():
     neue_note_semester_select.value_selected.set("Halbjahr auswählen")
@@ -160,46 +148,6 @@ def activate_neuenotescreen():
     HomeScreen.hide()
     NotenScreen.hide()
     NeueNoteScreen.show()
-    SettingsScreen.hide()
-    SubjectSettingsScreen.hide()
-    StyleSettingsScreen.hide()
-    ExportSettingsScreen.hide()
-
-def activate_settingsscreen():
-    HomeScreen.hide()
-    NotenScreen.hide()
-    NeueNoteScreen.hide()
-    SettingsScreen.show()
-    SubjectSettingsScreen.hide()
-    StyleSettingsScreen.hide()
-    ExportSettingsScreen.hide()
-
-def activate_subjectsettingsscreen():
-    HomeScreen.hide()
-    NotenScreen.hide()
-    NeueNoteScreen.hide()
-    SettingsScreen.hide()
-    SubjectSettingsScreen.show()
-    StyleSettingsScreen.hide()
-    ExportSettingsScreen.hide()
-
-def activate_stylesettingsscreen():
-    HomeScreen.hide()
-    NotenScreen.hide()
-    NeueNoteScreen.hide()
-    SettingsScreen.hide()
-    SubjectSettingsScreen.hide()
-    StyleSettingsScreen.show()
-    ExportSettingsScreen.hide()
-
-def activate_exportsettingsscreen():
-    HomeScreen.hide()
-    NotenScreen.hide()
-    NeueNoteScreen.hide()
-    SettingsScreen.hide()
-    SubjectSettingsScreen.hide()
-    StyleSettingsScreen.hide()
-    ExportSettingsScreen.show()
 
 def database_initialisation():
     cur.execute("""
@@ -245,16 +193,7 @@ def database_initialisation():
     )
     """)
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS settings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        font TEXT NOT NULL
-    )
-    """)
-
     con.commit()
-
-    get_font()
 
 def database_backup_full():
     table_list = ["subjects", "grades", "semesters", "points", "types"]
@@ -294,8 +233,6 @@ def menubar_initialisation():
     rechner_menu.add_cascade(label="Fächer", menu=sub_fach_menu)
     rechner_menu.add_command(label="Neue Note", command=activate_neuenotescreen)
     rechner_menu.add_separator()
-    rechner_menu.add_command(label="Einstellungen", command=activate_settingsscreen)
-    rechner_menu.add_separator()
     rechner_menu.add_command(label="Quit", command=root.destroy)
 
     number_of_subjects = len(subject_settings.list)
@@ -306,14 +243,6 @@ def menubar_initialisation():
         x = x+1
 
     menubar.add_cascade(label="Notenrechner", menu=rechner_menu)
-
-def get_font():
-    global font_type
-    font_type = cur.execute("SELECT font FROM settings")
-
-def set_font():
-    cur.execute(f"""INSERT INTO settings (font) VALUES ("{font_selected}")""")
-    get_font()
 
 def command_notenscreen_selected_fach(event):
     notenscreen_selected_fach()
@@ -357,11 +286,6 @@ def neue_noten_values():
 def clear_error_message():
     Labelmaker(neuroot, 215, 270, 171, 30, 14, text="")
 
-def subject_settings_delete_subject():
-    subject = subject_settings_subject_select.value_selected.get()
-    cur.execute(f"""DELETE FROM  subjects WHERE name='{subject}'""")
-    con.commit()
-
 #########################################################
 
 database_initialisation()
@@ -378,28 +302,9 @@ type_settings.get_data("name", "types")
 HomeScreen = Screen(homeroot, "Notenrechner")
 NotenScreen = Screen(notenroot, "Noten")
 NeueNoteScreen = Screen(neuroot, "Neue Note")
-SettingsScreen = Screen(settingsroot, "Einstellungen")
-SubjectSettingsScreen = Screen(subject_settingsroot, "Fächer Optionen")
-StyleSettingsScreen = Screen(style_settingsroot, "Style Optionen")
-ExportSettingsScreen = Screen(export_settingsroot, "Import/Export Optionen")
 
 home_title = Labelmaker(homeroot, 115, 111, 370, 75, 64, text="Notenrechner")
 home_button_noten = Buttonmaker(homeroot, 170, 208, 260, 30, 14, text="Noten", command=activate_notenscreen)
-home_button_gesamt = Buttonmaker(homeroot, 170, 260, 260, 30, 14, text="Einstellungen", command=activate_settingsscreen)
-
-settings_title = Labelmaker(settingsroot, 171, 60, 260, 40, 36, text="Einstellungen")
-settings_subject_options_button = Buttonmaker(settingsroot, 209, 143, 171, 30, 14, text="Fächer-Optionen", command=activate_subjectsettingsscreen)
-settings_style_options_button = Buttonmaker(settingsroot, 209, 191, 171, 30, 14, text="Style-Optionen", command=activate_stylesettingsscreen)
-settings_export_options_button = Buttonmaker(settingsroot, 209, 239, 171, 30, 14, text="Import/Export-Optionen", command=activate_exportsettingsscreen)
-settings_fertig_button = Buttonmaker(settingsroot, 171, 310, 260, 30, 14, text="Fertig", command=activate_homescreen)
-
-subject_settings_title = Labelmaker(subject_settingsroot, 140, 50, 321, 42, 36, text="Fächer - Optionen")
-subject_settings_label_subjects = Labelmaker(subject_settingsroot, 37, 125, 171, 30, 14, text="Fächer:")
-subject_settings_label_new_subjects = Labelmaker(subject_settingsroot, 37, 195, 171, 30, 14, text="Neues Fach:")
-subject_settings_seperator = Labelmaker(subject_settingsroot, 24, 169, 550, 12, 10, text="---------------------------------------------------------------------------------------------------------------------------------------")
-subject_settings_subject_select = Optionmenumaker(subject_settingsroot, 214, 125, 171, 30, 14, subject_settings.list, text="Fächer")
-subject_settings_subject_delete = Buttonmaker(subject_settingsroot, 432, 125, 130, 30, 14, text="Fach löschen", command=subject_settings_delete_subject)
-subject_settings_subject_delete_disclaimer = Labelmaker(subject_settingsroot, 432, 155, 130, 12, 8, text="Benötigt Restart im Anschluss!")
 
 noten_title = Labelmaker(notenroot, 85, 34, 430, 40, 36, text="Fach auswählen")
 noten_subject_select = Optionmenumaker(notenroot, 86, 335, 171, 30, 14, subject_settings.list, text="Fach auswählen", command=command_notenscreen_selected_fach)
